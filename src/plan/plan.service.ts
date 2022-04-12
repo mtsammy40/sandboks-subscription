@@ -38,11 +38,14 @@ export class PlanService {
     return plan;
   }
 
-  update(id: string, updatePlanDto: UpdatePlanDto) {
-    return `This action updates a #${id} plan`;
-  }
-
-  remove(id: string) {
-    return `This action removes a #${id} plan`;
+  async findDefault(): Promise<Plan> {
+    const plan = await this.planRepository.findOneBy({ isDefault: true });
+    if (!plan) {
+      throw ApplicationException.simpleException(
+        ErrorCode.GENERAL,
+        'Default Plan not found',
+      );
+    }
+    return plan;
   }
 }

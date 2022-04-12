@@ -5,6 +5,7 @@ import { CreateSubscriptionDto } from './dto/create-subscription.dto';
 import { UpdateSubscriptionDto } from './dto/update-subscription.dto';
 import { PlatformEvents } from '../commons/data/platform-events.enum';
 import { NotificationAccountingDto } from '../commons/dto/notification-accounting.dto';
+import { PlanService } from '../plan/plan.service';
 
 @Controller()
 export class SubscriptionController {
@@ -17,11 +18,10 @@ export class SubscriptionController {
   }
 
   @EventPattern(PlatformEvents.USER_CREATED)
-  createForUser(userDto: any) {
+  async createForUser(userDto: any) {
     console.log('Payload ', userDto);
     const createSubscriptionDto = new CreateSubscriptionDto();
     createSubscriptionDto.userId = userDto.value.id;
-    createSubscriptionDto.planId = '06d59e6c-a6c0-11ec-b909-0242ac120002';
     return this.subscriptionService.createSubscription(createSubscriptionDto);
   }
 

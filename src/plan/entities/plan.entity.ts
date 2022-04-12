@@ -29,4 +29,7 @@ export class Plan extends BaseEntity {
   @Column({ nullable: false, type: 'jsonb' })
   configuration: PlanConfiguration;
 
+  @Column({ nullable: true, type: 'boolean' })
+  isDefault: boolean;
+
 }

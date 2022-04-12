@@ -23,7 +23,8 @@ export class SubscriptionService implements SubscriptionManager {
     @InjectRepository(Subscription)
     private readonly subscriptionRepository: Repository<Subscription>,
     private readonly planService: PlanService,
-  ) {}
+  ) {
+  }
 
   async accountForNotification(
     notificationAccountingDto: NotificationAccountingDto,
@@ -74,7 +75,7 @@ export class SubscriptionService implements SubscriptionManager {
 
     await this.client.emit<Subscription>(
       PlatformEvents.NOTIFICATION_ACCOUNTING_DONE,
-      notificationAccountingDto,
+      JSON.stringify(notificationAccountingDto),
     );
     return true;
   }
@@ -86,6 +87,9 @@ export class SubscriptionService implements SubscriptionManager {
       'CreateSubscription ',
       JSON.stringify(createSubscriptionDto),
     );
+
+    createSubscriptionDto.planId = (await this.planService.findDefault()).id;
+
     await createSubscriptionDto.test();
 
     const subscription = Subscription.create(
@@ -98,7 +102,7 @@ export class SubscriptionService implements SubscriptionManager {
 
     await this.client.emit<Subscription>(
       PlatformEvents.SUBSCRIPTION_CREATED,
-      savedSubscription,
+      JSON.stringify(savedSubscription),
     );
     return savedSubscription;
   }
@@ -113,7 +117,7 @@ export class SubscriptionService implements SubscriptionManager {
 
     await this.client.emit<Subscription>(
       PlatformEvents.SUBSCRIPTION_EXPIRED,
-      savedSubscription,
+      JSON.stringify(savedSubscription),
     );
 
     return true;
@@ -129,7 +133,7 @@ export class SubscriptionService implements SubscriptionManager {
 
     await this.client.emit<Subscription>(
       PlatformEvents.SUBSCRIPTION_SUSPENDED,
-      savedSubscription,
+      JSON.stringify(savedSubscription),
     );
 
     return true;
