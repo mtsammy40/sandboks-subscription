@@ -6,6 +6,7 @@ import { NotificationAccountingDto } from '../commons/dto/notification-accountin
 export abstract class SubscriptionManager {
   abstract createSubscription(
     createSubscriptionDto: CreateSubscriptionDto,
+    returnId: string
   ): Promise<Subscription>;
 
   abstract suspendSubscription(id: string, reason: string): Promise<boolean>;

@@ -5,10 +5,10 @@ export const microserviceConfig: KafkaOptions = {
 
   options: {
     client: {
-      brokers: ['165.22.125.172:9092'],
+      brokers: ['38.242.152.41:29092'],
     },
     consumer: {
-      groupId: 'app-consumers-subscription',
+      groupId: 'app.subscription',
       allowAutoTopicCreation: true,
     },
   },

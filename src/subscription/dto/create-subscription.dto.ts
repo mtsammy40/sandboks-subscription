@@ -6,6 +6,11 @@ export class CreateSubscriptionDto implements Validatable {
   userId: string;
   planId: string;
 
+  constructor(userId: string, planId: string) {
+    this.planId = planId;
+    this.userId = userId;
+  }
+
   async test(): Promise<boolean> {
     if (!this.userId) {
       throw ApplicationException.simpleException(
