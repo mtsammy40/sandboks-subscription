@@ -12,6 +12,8 @@ import { PlatformEvents } from '../commons/data/platform-events.enum';
 import { PlanService } from '../plan/plan.service';
 import { ChannelConfiguration } from '../plan/entities/plan.entity';
 import { NotificationAccountingDto } from '../commons/dto/notification-accounting.dto';
+import { PlatformBus } from 'src/commons/data/platform-bus.enum';
+import { PlatformEvent } from 'src/commons/data/platform-event';
 
 @Injectable()
 export class SubscriptionService implements SubscriptionManager {
@@ -82,6 +84,7 @@ export class SubscriptionService implements SubscriptionManager {
 
   async createSubscription(
     createSubscriptionDto: CreateSubscriptionDto,
+    returnId: string
   ): Promise<Subscription> {
     this.logger.log(
       'CreateSubscription ',
@@ -101,10 +104,15 @@ export class SubscriptionService implements SubscriptionManager {
     );
 
     await this.client.emit<Subscription>(
-      PlatformEvents.SUBSCRIPTION_CREATED,
-      JSON.stringify(savedSubscription),
+      PlatformBus.APP,
+      JSON.stringify(new PlatformEvent(returnId, PlatformEvents.SUBSCRIPTION_CREATED, savedSubscription)),
     );
     return savedSubscription;
+  }
+
+  async createSubscriptionFromUser(userDto: any): Promise<Subscription> {
+    const createSubscriptionDto = new CreateSubscriptionDto(userDto.id, null);
+    return this.createSubscription(createSubscriptionDto, null);
   }
 
   async expireSubscription(id: string): Promise<boolean> {
@@ -116,7 +124,7 @@ export class SubscriptionService implements SubscriptionManager {
     );
 
     await this.client.emit<Subscription>(
-      PlatformEvents.SUBSCRIPTION_EXPIRED,
+      PlatformBus.A,
       JSON.stringify(savedSubscription),
     );
 
