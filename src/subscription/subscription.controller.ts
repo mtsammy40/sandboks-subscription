@@ -1,4 +1,4 @@
-import { Controller } from '@nestjs/common';
+import { Controller, Logger } from '@nestjs/common';
 import { EventPattern, Payload } from '@nestjs/microservices';
 import { SubscriptionService } from './subscription.service';
 import { CreateSubscriptionDto } from './dto/create-subscription.dto';
@@ -10,21 +10,26 @@ import { PlatformEvent } from 'src/commons/data/platform-event';
 
 @Controller()
 export class SubscriptionController {
+  private readonly logger = new Logger(SubscriptionService.name);
+
   constructor(private readonly subscriptionService: SubscriptionService) {
   }
 
   @EventPattern(PlatformBus.APP)
-  process(@Payload() platformEvent: PlatformEvent): void {
+  process(@Payload('value') platformEvent: PlatformEvent): void {
+    this.logger.log('Receiving payload...'+ JSON.stringify(platformEvent))
     this.route(platformEvent)
   }
 
   route(platformEvent: PlatformEvent): void {
-    if(platformEvent._eid == PlatformEvents.CREATE_SUBSCRIPTION_REQUESTED || platformEvent._eid === PlatformEvents.USER_CREATED) {
-      this.subscriptionService.createSubscription(platformEvent.data, platformEvent._rid);
+    this.logger.log('Type '+platformEvent._eid);
+    if(platformEvent._eid === PlatformEvents.CREATE_SUBSCRIPTION_REQUESTED ) {
+      this.subscriptionService.createSubscription(new CreateSubscriptionDto(platformEvent.data.userId, platformEvent.data.planId), platformEvent._rid);
+    } else if(platformEvent._eid === PlatformEvents.USER_CREATED) {
+      this.subscriptionService.createSubscriptionFromUser(platformEvent.data);
     }
   }
 
-  @EventPattern(PlatformEvents.USER_CREATED)
   async createForUser(userDto: any) {
     return this.subscriptionService.createSubscriptionFromUser(userDto);
   }

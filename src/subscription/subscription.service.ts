@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { CreateSubscriptionDto } from './dto/create-subscription.dto';
 import { SubscriptionManager } from './subscription-manager';
 import { Status, Subscription } from './entities/subscription.entity';
@@ -14,18 +14,29 @@ import { ChannelConfiguration } from '../plan/entities/plan.entity';
 import { NotificationAccountingDto } from '../commons/dto/notification-accounting.dto';
 import { PlatformBus } from 'src/commons/data/platform-bus.enum';
 import { PlatformEvent } from 'src/commons/data/platform-event';
+import { randomUUID } from 'crypto';
+import { AppEventProcessor } from 'src/commons/emitter';
 
 @Injectable()
-export class SubscriptionService implements SubscriptionManager {
+export class SubscriptionService implements SubscriptionManager, OnModuleInit {
   @Client(microserviceConfig) client: ClientKafka;
 
-  private readonly logger = new Logger(SubscriptionService.name);
+  private logger = new Logger(SubscriptionService.name);
 
   constructor(
     @InjectRepository(Subscription)
     private readonly subscriptionRepository: Repository<Subscription>,
     private readonly planService: PlanService,
   ) {
+  }
+
+  onModuleInit() {
+    this.logger.log('Sending payload...');
+    let createSubscriptionData: CreateSubscriptionDto = new CreateSubscriptionDto(randomUUID(), 'random_plan_id');
+    this.client.emit<Subscription>(
+      PlatformBus.APP,
+      JSON.stringify(new PlatformEvent('rid', PlatformEvents.CREATE_SUBSCRIPTION_REQUESTED, createSubscriptionData)),
+    );
   }
 
   async accountForNotification(
@@ -75,13 +86,14 @@ export class SubscriptionService implements SubscriptionManager {
     subscription.counter[type.toLowerCase()] = messageCounter + 1;
     await this.subscriptionRepository.save(subscription);
 
-    await this.client.emit<Subscription>(
-      PlatformEvents.NOTIFICATION_ACCOUNTING_DONE,
-      JSON.stringify(notificationAccountingDto),
-    );
+    // await this.client.emit<Subscription>(
+    //   PlatformEvents.NOTIFICATION_ACCOUNTING_DONE,
+    //   JSON.stringify(notificationAccountingDto),
+    // );
     return true;
   }
 
+  @AppEventProcessor(PlatformEvents.SUBSCRIPTION_CREATED, PlatformEvents.SUBSCRIPTION_CREATION_FAILED)
   async createSubscription(
     createSubscriptionDto: CreateSubscriptionDto,
     returnId: string
@@ -92,9 +104,16 @@ export class SubscriptionService implements SubscriptionManager {
     );
 
     createSubscriptionDto.planId = (await this.planService.findDefault()).id;
-
+    this.logger.log("this thing " + JSON.stringify(createSubscriptionDto));
     await createSubscriptionDto.test();
 
+    const existingActiveSubscription = await this.subscriptionRepository
+      .findOneBy({ userId: createSubscriptionDto.userId, status: Status.ACTIVE });
+    if (existingActiveSubscription) {
+      throw ApplicationException
+        .simpleException(ErrorCode.CONDITION_FAILED, "An active subscription exists for the user");
+    }
+    
     const subscription = Subscription.create(
       createSubscriptionDto.userId,
       createSubscriptionDto.planId,
@@ -103,10 +122,10 @@ export class SubscriptionService implements SubscriptionManager {
       subscription,
     );
 
-    await this.client.emit<Subscription>(
-      PlatformBus.APP,
-      JSON.stringify(new PlatformEvent(returnId, PlatformEvents.SUBSCRIPTION_CREATED, savedSubscription)),
-    );
+    // await this.client.emit<Subscription>(
+    //   PlatformBus.APP,
+    //   JSON.stringify(new PlatformEvent(returnId, PlatformEvents.SUBSCRIPTION_CREATED, savedSubscription)),
+    // );
     return savedSubscription;
   }
 
@@ -124,7 +143,7 @@ export class SubscriptionService implements SubscriptionManager {
     );
 
     await this.client.emit<Subscription>(
-      PlatformBus.A,
+      PlatformBus.APP,
       JSON.stringify(savedSubscription),
     );
 

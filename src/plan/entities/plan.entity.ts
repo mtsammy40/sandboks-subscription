@@ -4,6 +4,8 @@ import { BaseEntity } from '../../commons/data/base-entity';
 export enum Status {
   ACTIVE = 'ACTIVE',
   SUSPENDED = 'SUSPENDED',
+  CANCELLED = 'CANCELLED',
+  EXPIRED = 'EXPIRED'
 }
 
 export interface PlanConfiguration {
