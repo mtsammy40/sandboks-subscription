@@ -1,7 +1,6 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller } from '@nestjs/common';
 import { AppService } from './app.service';
 import { EventPattern, Payload } from '@nestjs/microservices';
-import { PlatformEvents } from './commons/data/platform-events.enum';
 import { PlatformBus } from './commons/data/platform-bus.enum';
 import { PlatformEvent } from './commons/data/platform-event';
 
