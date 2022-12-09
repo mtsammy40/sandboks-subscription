@@ -5,6 +5,7 @@ import { SubscriptionModule } from './subscription/subscription.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Subscription } from './subscription/entities/subscription.entity';
 import { Plan } from './plan/entities/plan.entity';
+import { CommonModule } from './common/common.module';
 
 @Module({
   imports: [SubscriptionModule, TypeOrmModule.forRootAsync({
@@ -18,7 +19,7 @@ import { Plan } from './plan/entities/plan.entity';
       },
       entities: [Subscription, Plan]
     }),
-  })],
+  }), CommonModule,],
   controllers: [AppController],
   providers: [AppService],
 })

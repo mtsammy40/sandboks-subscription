@@ -6,9 +6,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Subscription } from './entities/subscription.entity';
 import { PlanService } from '../plan/plan.service';
 import { Plan } from '../plan/entities/plan.entity';
+import { CommonModule } from 'src/common/common.module';
 
 @Module({
-  imports: [PlanModule, TypeOrmModule.forFeature([Subscription, Plan])],
+  imports: [PlanModule, TypeOrmModule.forFeature([Subscription, Plan]), CommonModule],
   controllers: [SubscriptionController],
   providers: [SubscriptionService, PlanService],
   exports: [PlanModule, TypeOrmModule],

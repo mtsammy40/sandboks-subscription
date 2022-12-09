@@ -7,8 +7,8 @@ import { Repository } from 'typeorm';
 import { Client, ClientKafka } from '@nestjs/microservices';
 import { microserviceConfig } from '../microservice.config';
 import { Subscription } from '../subscription/entities/subscription.entity';
-import { ApplicationException } from '../commons/exceptions/application.exception';
-import { ErrorCode } from '../commons/exceptions/error.code';
+import { ApplicationException } from '../common/exceptions/application.exception';
+import { ErrorCode } from '../common/exceptions/error.code';
 
 @Injectable()
 export class PlanService {

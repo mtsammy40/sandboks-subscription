@@ -2,20 +2,22 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { CreateSubscriptionDto } from './dto/create-subscription.dto';
 import { SubscriptionManager } from './subscription-manager';
 import { Status, Subscription } from './entities/subscription.entity';
-import { ApplicationException } from '../commons/exceptions/application.exception';
-import { ErrorCode } from '../commons/exceptions/error.code';
+import { ApplicationException } from '../common/exceptions/application.exception';
+import { ErrorCode } from '../common/exceptions/error.code';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Client, ClientKafka } from '@nestjs/microservices';
 import { microserviceConfig } from '../microservice.config';
-import { PlatformEvents } from '../commons/data/platform-events.enum';
+import { PlatformEvents } from '../common/data/platform-events.enum';
 import { PlanService } from '../plan/plan.service';
 import { ChannelConfiguration } from '../plan/entities/plan.entity';
-import { NotificationAccountingDto } from '../commons/dto/notification-accounting.dto';
-import { PlatformBus } from 'src/commons/data/platform-bus.enum';
-import { PlatformEvent } from 'src/commons/data/platform-event';
+import { NotificationAccountingDto } from '../common/dto/notification-accounting.dto';
+import { PlatformBus } from 'src/common/data/platform-bus.enum';
+import { PlatformEvent } from 'src/common/data/platform-event';
 import { randomUUID } from 'crypto';
-import { AppEventProcessor } from 'src/commons/emitter';
+import { AppEventProcessor } from 'src/common/emitter';
+import { Observable, tap } from 'rxjs';
+import { EventsProvider } from 'src/common/events/events-provider';
 
 @Injectable()
 export class SubscriptionService implements SubscriptionManager, OnModuleInit {
@@ -27,16 +29,23 @@ export class SubscriptionService implements SubscriptionManager, OnModuleInit {
     @InjectRepository(Subscription)
     private readonly subscriptionRepository: Repository<Subscription>,
     private readonly planService: PlanService,
+    private readonly eventsProvider: EventsProvider
   ) {
   }
 
+  subscribe(): Observable<any> {
+    return this.eventsProvider.subscribe();
+  }
+
   onModuleInit() {
-    this.logger.log('Sending payload...');
-    let createSubscriptionData: CreateSubscriptionDto = new CreateSubscriptionDto(randomUUID(), 'random_plan_id');
-    this.client.emit<Subscription>(
-      PlatformBus.APP,
-      JSON.stringify(new PlatformEvent('rid', PlatformEvents.CREATE_SUBSCRIPTION_REQUESTED, createSubscriptionData)),
-    );
+    setInterval(() => {
+      this.logger.log('Sending payload...');
+      let createSubscriptionData: CreateSubscriptionDto = new CreateSubscriptionDto(randomUUID(), 'random_plan_id');
+      this.client.emit<any>(
+        PlatformBus.APP,
+        JSON.stringify(new PlatformEvent('rid', PlatformEvents.CREATE_SUBSCRIPTION_REQUESTED, createSubscriptionData)),
+      );
+    }, 10000);
   }
 
   async accountForNotification(
@@ -102,7 +111,7 @@ export class SubscriptionService implements SubscriptionManager, OnModuleInit {
       'CreateSubscription ',
       JSON.stringify(createSubscriptionDto),
     );
-
+    createSubscriptionDto = new CreateSubscriptionDto(createSubscriptionDto.userId, createSubscriptionDto.planId);
     createSubscriptionDto.planId = (await this.planService.findDefault()).id;
     this.logger.log("this thing " + JSON.stringify(createSubscriptionDto));
     await createSubscriptionDto.test();
@@ -113,7 +122,7 @@ export class SubscriptionService implements SubscriptionManager, OnModuleInit {
       throw ApplicationException
         .simpleException(ErrorCode.CONDITION_FAILED, "An active subscription exists for the user");
     }
-    
+
     const subscription = Subscription.create(
       createSubscriptionDto.userId,
       createSubscriptionDto.planId,

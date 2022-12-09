@@ -20,9 +20,10 @@ export function AppEventProcessor(onReturn: PlatformEvents, onError: PlatformEve
                 client.emit<Subscription>(
                     PlatformBus.APP,
                     JSON.stringify(envelope),
-                ).pipe(tap(eventSub => console.log('Sending response...')));
+                ).pipe(tap(eventSub => console.log('Sending response...', eventSub)));
                 return returnValue;
             } catch (e: any) {
+                console.error(e);
                 if (e instanceof ApplicationException) {
                    
                 } else {
@@ -34,7 +35,7 @@ export function AppEventProcessor(onReturn: PlatformEvents, onError: PlatformEve
                 client.emit<Subscription>(
                     PlatformBus.APP,
                     JSON.stringify(envelope),
-                ).pipe(tap(eventSub => console.log('Sending error response...')));
+                ).pipe(tap(eventSub => console.log('Sending error response...', eventSub)));
                 throw e;
             }
         }

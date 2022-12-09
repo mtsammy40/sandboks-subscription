@@ -1,7 +1,7 @@
 import { Subscription } from './entities/subscription.entity';
 import { CreateSubscriptionDto } from './dto/create-subscription.dto';
-import { NotificationType } from '../commons/data/notification-type.enum';
-import { NotificationAccountingDto } from '../commons/dto/notification-accounting.dto';
+import { NotificationType } from '../common/data/notification-type.enum';
+import { NotificationAccountingDto } from '../common/dto/notification-accounting.dto';
 
 export abstract class SubscriptionManager {
   abstract createSubscription(

@@ -1,6 +1,6 @@
-import { Validatable } from '../../commons/Validatable';
-import { ApplicationException } from '../../commons/exceptions/application.exception';
-import { ErrorCode } from '../../commons/exceptions/error.code';
+import { Validatable } from '../../common/Validatable';
+import { ApplicationException } from '../../common/exceptions/application.exception';
+import { ErrorCode } from '../../common/exceptions/error.code';
 
 export class CreateSubscriptionDto implements Validatable {
   userId: string;

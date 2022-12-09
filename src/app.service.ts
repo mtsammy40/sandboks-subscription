@@ -1,21 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { BehaviorSubject, filter, Observable } from 'rxjs';
-import { PlatformEvent } from './commons/data/platform-event';
-import { PlatformEvents } from './commons/data/platform-events.enum';
+import { PlatformEvent } from './common/data/platform-event';
+import { EventsProvider } from './common/events/events-provider';
 
 @Injectable()
 export class AppService {
- private eventsPipe$: BehaviorSubject<PlatformEvent> = new BehaviorSubject<PlatformEvent>(null);
+  constructor(private readonly eventsProvider: EventsProvider){}
 
- async publishToEventsPipe(platformEvent: PlatformEvent): Promise<void> {
-  this.eventsPipe$.next(platformEvent);
- }
-
- subscribe(event?: PlatformEvents): Observable<PlatformEvent> {
-  if(event) {
-    return this.eventsPipe$.pipe(filter((_platformEvent) => _platformEvent._eid === event))
-  } else {
-    return this.eventsPipe$.pipe();
+  async publish(platformEvent: PlatformEvent): Promise<void> {
+    await this.eventsProvider.publishToEventsPipe(platformEvent)
   }
- }
 }

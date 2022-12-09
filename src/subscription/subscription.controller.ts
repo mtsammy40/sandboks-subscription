@@ -3,38 +3,30 @@ import { EventPattern, Payload } from '@nestjs/microservices';
 import { SubscriptionService } from './subscription.service';
 import { CreateSubscriptionDto } from './dto/create-subscription.dto';
 import { UpdateSubscriptionDto } from './dto/update-subscription.dto';
-import { PlatformEvents } from '../commons/data/platform-events.enum';
-import { NotificationAccountingDto } from '../commons/dto/notification-accounting.dto';
-import { PlatformBus } from 'src/commons/data/platform-bus.enum';
-import { PlatformEvent } from 'src/commons/data/platform-event';
+import { PlatformEvents } from '../common/data/platform-events.enum';
+import { NotificationAccountingDto } from '../common/dto/notification-accounting.dto';
+import { PlatformBus } from 'src/common/data/platform-bus.enum';
+import { PlatformEvent } from 'src/common/data/platform-event';
+import { PlatformEventListener } from 'src/common/listener';
+import { PlatformEventWatcher } from 'src/common/platform-event-watcher';
+import { EventsProvider } from 'src/common/events/events-provider';
 
 @Controller()
+@PlatformEventWatcher
 export class SubscriptionController {
   private readonly logger = new Logger(SubscriptionService.name);
 
-  constructor(private readonly subscriptionService: SubscriptionService) {
+  constructor(private readonly subscriptionService: SubscriptionService, private readonly eventsProvider: EventsProvider) {
   }
 
-  @EventPattern(PlatformBus.APP)
-  process(@Payload('value') platformEvent: PlatformEvent): void {
-    this.logger.log('Receiving payload...'+ JSON.stringify(platformEvent))
-    this.route(platformEvent)
+  
+  @PlatformEventListener(PlatformEvents.CREATE_SUBSCRIPTION_REQUESTED)
+  async create(createSubscriptionDto: any, rid: string) {
+    console.log('If we are here we are good', createSubscriptionDto);
+    return this.subscriptionService.createSubscription(createSubscriptionDto, rid);
   }
 
-  route(platformEvent: PlatformEvent): void {
-    this.logger.log('Type '+platformEvent._eid);
-    if(platformEvent._eid === PlatformEvents.CREATE_SUBSCRIPTION_REQUESTED ) {
-      this.subscriptionService.createSubscription(new CreateSubscriptionDto(platformEvent.data.userId, platformEvent.data.planId), platformEvent._rid);
-    } else if(platformEvent._eid === PlatformEvents.USER_CREATED) {
-      this.subscriptionService.createSubscriptionFromUser(platformEvent.data);
-    }
-  }
-
-  async createForUser(userDto: any) {
-    return this.subscriptionService.createSubscriptionFromUser(userDto);
-  }
-
-  @EventPattern(PlatformEvents.NOTIFICATION_POSTING_REQUESTED)
+  @PlatformEventListener(PlatformEvents.NOTIFICATION_POSTING_REQUESTED)
   accounting(@Payload() notificationAccountingDto: NotificationAccountingDto) {
     return this.subscriptionService.accountForNotification(
       notificationAccountingDto,

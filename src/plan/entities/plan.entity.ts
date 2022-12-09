@@ -1,5 +1,5 @@
 import { Column, Entity } from 'typeorm';
-import { BaseEntity } from '../../commons/data/base-entity';
+import { BaseEntity } from '../../common/data/base-entity';
 
 export enum Status {
   ACTIVE = 'ACTIVE',
